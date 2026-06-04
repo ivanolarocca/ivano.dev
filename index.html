@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ivano.dev</title>
+  <meta name="description" content="Ivano La Rocca — personal site, coming soon." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --fg: #e8e8f0;
+      --accent: #7c6af7;
+      --dim: #3a3a5c;
+      --glow: rgba(124, 106, 247, 0.35);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+    }
+
+    /* ── Canvas background ── */
+    canvas {
+      position: fixed;
+      inset: 0;
+      opacity: 0.18;
+    }
+
+    /* ── Center card ── */
+    .card {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.6rem;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    /* ── Name with glitch ── */
+    .name {
+      font-size: clamp(3rem, 10vw, 7rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--fg);
+      position: relative;
+      user-select: none;
+    }
+
+    .name::before,
+    .name::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+    }
+
+    .name::before {
+      color: #f06292;
+      clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+      animation: glitch-a 4s infinite steps(1);
+    }
+
+    .name::after {
+      color: var(--accent);
+      clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+      animation: glitch-b 4s infinite steps(1);
+    }
+
+    @keyframes glitch-a {
+      0%,89%,100% { opacity: 0; transform: translate(0); }
+      90%          { opacity: 1; transform: translate(-4px, 1px); }
+      92%          { opacity: 1; transform: translate(4px, -1px); }
+      94%          { opacity: 0; }
+    }
+
+    @keyframes glitch-b {
+      0%,89%,100% { opacity: 0; transform: translate(0); }
+      90%          { opacity: 1; transform: translate(3px, 2px); }
+      93%          { opacity: 1; transform: translate(-3px, -2px); }
+      95%          { opacity: 0; }
+    }
+
+    /* ── Typing line ── */
+    .typing-wrap {
+      font-size: clamp(0.85rem, 2.2vw, 1.1rem);
+      color: var(--accent);
+      height: 1.5em;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .typing-wrap .prompt { color: var(--dim); margin-right: 0.5ch; }
+
+    #typed {
+      border-right: 2px solid var(--accent);
+      animation: blink 0.75s step-end infinite;
+      padding-right: 2px;
+      white-space: nowrap;
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    /* ── Status pill ── */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      border: 1px solid var(--dim);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 8px var(--glow);
+    }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    /* ── Social links ── */
+    .links {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 0.4rem;
+    }
+
+    .links a {
+      color: var(--dim);
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+
+    .links a:hover { color: var(--accent); }
+
+    /* ── Corner coords ── */
+    .coords {
+      position: fixed;
+      bottom: 1.4rem;
+      right: 1.6rem;
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      line-height: 1.7;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="card">
+  <h1 class="name" data-text="ivano.dev">ivano.dev</h1>
+
+  <div class="typing-wrap">
+    <span class="prompt">$</span>
+    <span id="typed"></span>
+  </div>
+
+  <div class="status">
+    <span class="dot"></span>
+    under construction
+  </div>
+
+  <nav class="links">
+    <a href="https://github.com/ivanolarocca" target="_blank" rel="noopener">github</a>
+    <a href="https://linkedin.com/in/ivanolarocca" target="_blank" rel="noopener">linkedin</a>
+    <a href="mailto:ivano.lrc@gmail.com">email</a>
+  </nav>
+</div>
+
+<div class="coords" id="coords"></div>
+
+<script>
+  /* ── Particle field ── */
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+
+  let W, H, particles = [];
+
+  const CHARS = '01{}[]()<>/\\;:=+*&|abcdef'.split('');
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function spawn() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      char: CHARS[Math.floor(Math.random() * CHARS.length)],
+      speed: 0.18 + Math.random() * 0.55,
+      opacity: 0.1 + Math.random() * 0.6,
+      size: 11 + Math.floor(Math.random() * 10),
+      life: 0,
+      maxLife: 180 + Math.random() * 240,
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({ length: 90 }, spawn);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach((p, i) => {
+      p.y -= p.speed;
+      p.life++;
+
+      const t = p.life / p.maxLife;
+      const fade = t < 0.15 ? t / 0.15 : t > 0.8 ? 1 - (t - 0.8) / 0.2 : 1;
+
+      ctx.globalAlpha = p.opacity * fade;
+      ctx.fillStyle = '#7c6af7';
+      ctx.font = `${p.size}px 'Courier New', monospace`;
+      ctx.fillText(p.char, p.x, p.y);
+
+      if (p.life > p.maxLife || p.y < -20) {
+        particles[i] = spawn();
+        particles[i].y = H + 10;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init();
+  draw();
+
+  /* ── Typing effect ── */
+  const lines = [
+    'building something new...',
+    'git commit -m "init"',
+    'npm run dream',
+    'shipping soon™',
+    'stay tuned.',
+  ];
+
+  const el = document.getElementById('typed');
+  let li = 0, ci = 0, deleting = false, wait = 0;
+
+  function type() {
+    const line = lines[li];
+    if (wait > 0) { wait--; setTimeout(type, 60); return; }
+
+    if (!deleting) {
+      el.textContent = line.slice(0, ++ci);
+      if (ci === line.length) { deleting = true; wait = 38; }
+      setTimeout(type, 68 + Math.random() * 40);
+    } else {
+      el.textContent = line.slice(0, --ci);
+      if (ci === 0) { deleting = false; li = (li + 1) % lines.length; wait = 8; }
+      setTimeout(type, 32);
+    }
+  }
+  type();
+
+  /* ── Corner coordinates ── */
+  const coords = document.getElementById('coords');
+  function updateCoords(e) {
+    if (!e) return;
+    const x = ((e.clientX / window.innerWidth)  * 100).toFixed(1);
+    const y = ((e.clientY / window.innerHeight) * 100).toFixed(1);
+    coords.textContent = `x ${x}%\ny ${y}%`;
+  }
+  window.addEventListener('mousemove', updateCoords);
+</script>
+</body>
+</html>
