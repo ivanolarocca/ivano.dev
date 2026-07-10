@@ -9,26 +9,33 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0f;
-      --fg: #e8e8f0;
-      --accent: #7c6af7;
-      --dim: #3a3a5c;
-      --glow: rgba(124, 106, 247, 0.35);
+      --bg: #eef3fb;
+      --fg: #10203a;
+      --accent: #2563eb;
+      --dim: #6b7ba3;
+      --glow: rgba(37, 99, 235, 0.35);
     }
 
     html, body {
       height: 100%;
-      background: var(--bg);
       color: var(--fg);
       font-family: 'Courier New', Courier, monospace;
       overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 800px at 15% 10%, #dbe7ff 0%, transparent 55%),
+        radial-gradient(1000px 700px at 85% 90%, #cfe0ff 0%, transparent 55%),
+        radial-gradient(900px 900px at 50% 50%, #e8f0ff 0%, transparent 60%),
+        linear-gradient(160deg, #f4f8ff 0%, var(--bg) 45%, #e2ecfc 100%);
     }
 
     /* ── Canvas background ── */
     canvas {
       position: fixed;
       inset: 0;
-      opacity: 0.18;
+      opacity: 0.28;
     }
 
     /* ── Center card ── */
@@ -63,7 +70,7 @@
     }
 
     .name::before {
-      color: #f06292;
+      color: #e0508a;
       clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
       animation: glitch-a 4s infinite steps(1);
     }
@@ -236,7 +243,7 @@
       const fade = t < 0.15 ? t / 0.15 : t > 0.8 ? 1 - (t - 0.8) / 0.2 : 1;
 
       ctx.globalAlpha = p.opacity * fade;
-      ctx.fillStyle = '#7c6af7';
+      ctx.fillStyle = '#2563eb';
       ctx.font = `${p.size}px 'Courier New', monospace`;
       ctx.fillText(p.char, p.x, p.y);
 
@@ -255,7 +262,7 @@
   /* ── Typing effect ── */
   const lines = [
     'building something new...',
-    'git commit -m "init"',
+    'git commit -m "speriamo bene"',
     'npm run dream',
     'shipping soon™',
     'stay tuned.',
